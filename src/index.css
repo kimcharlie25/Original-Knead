@@ -2,14 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ramen Yard Custom Styles */
-/* Minimal helpers for ramen palette when needed outside tailwind tokens */
-.bg-ramen-cream { background-color: #FFF3E0; }
-.bg-ramen-beige { background-color: #F7E7CE; }
-.text-ramen-red { color: #D7263D; }
-.text-ramen-dark { color: #0B0A0A; }
-.border-ramen-sesame { border-color: #D1C7B7; }
-.ring-ramen-gold { --tw-ring-color: #E0A106; }
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=More+Sugar&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Cookie Business Custom Styles */
+/* Minimal helpers for cookie palette when needed outside tailwind tokens */
+.bg-cookie-background { background-color: #E6F2FF; }
+.bg-cookie-light { background-color: #F0F8FF; }
+.text-cookie-primary { color: #0f3c65; }
+.text-cookie-secondary { color: #3697f2; }
+.border-cookie-primary { border-color: #0f3c65; }
+.ring-cookie-primary { --tw-ring-color: #0f3c65; }
 
 /* Hide scrollbar for mobile nav */
 .scrollbar-hide {

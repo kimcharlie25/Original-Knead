@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Minus, X, ShoppingCart } from 'lucide-react';
 import { MenuItem, Variation, AddOn } from '../types';
+import { useCookieFlavors } from '../hooks/useCookieFlavors';
 
 interface MenuItemCardProps {
   item: MenuItem;
-  onAddToCart: (item: MenuItem, quantity?: number, variation?: Variation, addOns?: AddOn[]) => void;
+  onAddToCart: (item: MenuItem, quantity?: number, variation?: Variation, addOns?: AddOn[], bundleSelection?: Record<string, number>) => void;
   quantity: number;
   onUpdateQuantity: (id: string, quantity: number) => void;
 }
@@ -15,11 +16,22 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   quantity, 
   onUpdateQuantity 
 }) => {
+  const { cookieFlavors } = useCookieFlavors();
   const [showCustomization, setShowCustomization] = useState(false);
   const [selectedVariation, setSelectedVariation] = useState<Variation | undefined>(
     item.variations?.[0]
   );
   const [selectedAddOns, setSelectedAddOns] = useState<(AddOn & { quantity: number })[]>([]);
+  const [showBundleSelection, setShowBundleSelection] = useState(false);
+  
+  // Initialize bundle quantities based on active cookie flavors
+  const [bundleQuantities, setBundleQuantities] = useState<Record<string, number>>(() => {
+    const initial: Record<string, number> = {};
+    cookieFlavors.filter(f => f.active).forEach(flavor => {
+      initial[flavor.name] = 0;
+    });
+    return initial;
+  });
 
   const calculatePrice = () => {
     // Use effective price (discounted or regular) as base
@@ -34,6 +46,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   };
 
   const handleAddToCart = () => {
+    if (item.category === 'bundles') {
+      setShowBundleSelection(true);
+      return;
+    }
     if (item.variations?.length || item.addOns?.length) {
       setShowCustomization(true);
     } else {
@@ -49,6 +65,18 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
     onAddToCart(item, 1, selectedVariation, addOnsForCart);
     setShowCustomization(false);
     setSelectedAddOns([]);
+  };
+
+  const handleBundleConfirm = () => {
+    // Add bundle to cart with the selected cookie flavors
+    onAddToCart(item, 1, undefined, undefined, bundleQuantities);
+    setShowBundleSelection(false);
+    // Reset bundle quantities
+    const reset: Record<string, number> = {};
+    cookieFlavors.filter(f => f.active).forEach(flavor => {
+      reset[flavor.name] = 0;
+    });
+    setBundleQuantities(reset);
   };
 
   const handleIncrement = () => {
@@ -82,6 +110,28 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
     });
   };
 
+  const updateBundleQuantity = (flavor: string, delta: number) => {
+    setBundleQuantities(prev => ({
+      ...prev,
+      [flavor]: Math.max(0, prev[flavor] + delta)
+    }));
+  };
+
+  const getTotalBundleQuantity = () => {
+    return Object.values(bundleQuantities).reduce((sum, qty) => sum + qty, 0);
+  };
+
+  // Determine required quantity based on bundle name
+  const getRequiredBundleQuantity = () => {
+    if (item.category !== 'bundles') return 0;
+    
+    if (item.name.includes('Buy 3,')) return 4;  // Buy 3, get 1 FREE = 4 total
+    if (item.name.includes('Buy 5,')) return 6;  // Buy 5, get 1 FREE = 6 total
+    if (item.name.includes('Buy 10,')) return 11; // Buy 10, get 1 FREE = 11 total
+    
+    return 0;
+  };
+
   const groupedAddOns = item.addOns?.reduce((groups, addOn) => {
     const category = addOn.category;
     if (!groups[category]) {
@@ -90,6 +140,15 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
     groups[category].push(addOn);
     return groups;
   }, {} as Record<string, AddOn[]>);
+
+  // Update bundleQuantities when cookieFlavors change
+  useEffect(() => {
+    const initial: Record<string, number> = {};
+    cookieFlavors.filter(f => f.active).forEach(flavor => {
+      initial[flavor.name] = bundleQuantities[flavor.name] || 0;
+    });
+    setBundleQuantities(initial);
+  }, [cookieFlavors]);
 
   return (
     <>
@@ -116,12 +175,12 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {item.isOnDiscount && item.discountPrice && (
-              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-pulse">
+              <div className="bg-gradient-to-r from-cookie-secondary to-cookie-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-pulse">
                 SALE
               </div>
             )}
             {item.popular && (
-              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+              <div className="bg-gradient-to-r from-cookie-accent to-yellow-400 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                 ⭐ POPULAR
               </div>
             )}
@@ -135,7 +194,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           
           {/* Discount Percentage Badge */}
           {item.isOnDiscount && item.discountPrice && (
-            <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-red-600 text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+            <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm text-cookie-primary text-xs font-bold px-2 py-1 rounded-full shadow-lg">
               {Math.round(((item.basePrice - item.discountPrice) / item.basePrice) * 100)}% OFF
             </div>
           )}
@@ -162,7 +221,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               {item.isOnDiscount && item.discountPrice ? (
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-red-600">
+                    <span className="text-2xl font-bold text-cookie-secondary">
                       ₱{item.discountPrice.toFixed(2)}
                     </span>
                     <span className="text-sm text-gray-500 line-through">
@@ -198,22 +257,22 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               ) : quantity === 0 ? (
                 <button
                   onClick={handleAddToCart}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-105 font-medium text-sm shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-cookie-secondary to-cookie-primary text-white px-6 py-2.5 rounded-xl hover:from-cookie-primary hover:to-cookie-dark transition-all duration-200 transform hover:scale-105 font-medium text-sm shadow-lg hover:shadow-xl"
                 >
-                  {item.variations?.length || item.addOns?.length ? 'Customize' : 'Add to Cart'}
+                  {item.category === 'bundles' ? 'Select' : (item.variations?.length || item.addOns?.length ? 'Customize' : 'Add to Cart')}
                 </button>
               ) : (
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-1 border border-yellow-200">
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-cookie-light to-blue-100 rounded-xl p-1 border border-cookie-secondary">
                   <button
                     onClick={handleDecrement}
-                    className="p-2 hover:bg-yellow-200 rounded-lg transition-colors duration-200 hover:scale-110"
+                    className="p-2 hover:bg-cookie-background rounded-lg transition-colors duration-200 hover:scale-110"
                   >
                     <Minus className="h-4 w-4 text-gray-700" />
                   </button>
                   <span className="font-bold text-gray-900 min-w-[28px] text-center text-sm">{quantity}</span>
                   <button
                     onClick={handleIncrement}
-                    className="p-2 hover:bg-yellow-200 rounded-lg transition-colors duration-200 hover:scale-110"
+                    className="p-2 hover:bg-cookie-background rounded-lg transition-colors duration-200 hover:scale-110"
                   >
                     <Plus className="h-4 w-4 text-gray-700" />
                   </button>
@@ -238,7 +297,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between rounded-t-2xl">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900">Customize {item.name}</h3>
+                <h3 className="text-xl font-semibold text-cookie-primary">Customize {item.name}</h3>
                 <p className="text-sm text-gray-500 mt-1">Choose your preferences</p>
               </div>
               <button
@@ -253,14 +312,14 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               {/* Size Variations */}
               {item.variations && item.variations.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="font-semibold text-gray-900 mb-4">Choose Size</h4>
+                  <h4 className="font-semibold text-cookie-primary mb-4">Choose Size</h4>
                   <div className="space-y-3">
                     {item.variations.map((variation) => (
                       <label
                         key={variation.id}
                         className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                           selectedVariation?.id === variation.id
-                            ? 'border-red-500 bg-red-50'
+                            ? 'border-cookie-secondary bg-cookie-background'
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
@@ -270,7 +329,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                             name="variation"
                             checked={selectedVariation?.id === variation.id}
                             onChange={() => setSelectedVariation(variation)}
-                            className="text-red-600 focus:ring-red-500"
+                            className="text-cookie-secondary focus:ring-cookie-secondary"
                           />
                           <span className="font-medium text-gray-900">{variation.name}</span>
                         </div>
@@ -307,16 +366,16 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                             
                             <div className="flex items-center space-x-2">
                               {selectedAddOns.find(a => a.id === addOn.id) ? (
-                                <div className="flex items-center space-x-2 bg-red-100 rounded-xl p-1 border border-red-200">
+                                <div className="flex items-center space-x-2 bg-cookie-background rounded-xl p-1 border border-cookie-secondary">
                                   <button
                                     type="button"
                                     onClick={() => {
                                       const current = selectedAddOns.find(a => a.id === addOn.id);
                                       updateAddOnQuantity(addOn, (current?.quantity || 1) - 1);
                                     }}
-                                    className="p-1.5 hover:bg-red-200 rounded-lg transition-colors duration-200"
+                                    className="p-1.5 hover:bg-cookie-light rounded-lg transition-colors duration-200"
                                   >
-                                    <Minus className="h-3 w-3 text-red-600" />
+                                    <Minus className="h-3 w-3 text-cookie-primary" />
                                   </button>
                                   <span className="font-semibold text-gray-900 min-w-[24px] text-center text-sm">
                                     {selectedAddOns.find(a => a.id === addOn.id)?.quantity || 0}
@@ -327,16 +386,16 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                                       const current = selectedAddOns.find(a => a.id === addOn.id);
                                       updateAddOnQuantity(addOn, (current?.quantity || 0) + 1);
                                     }}
-                                    className="p-1.5 hover:bg-red-200 rounded-lg transition-colors duration-200"
+                                    className="p-1.5 hover:bg-cookie-light rounded-lg transition-colors duration-200"
                                   >
-                                    <Plus className="h-3 w-3 text-red-600" />
+                                    <Plus className="h-3 w-3 text-cookie-primary" />
                                   </button>
                                 </div>
                               ) : (
                                 <button
                                   type="button"
                                   onClick={() => updateAddOnQuantity(addOn, 1)}
-                                  className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 text-sm font-medium shadow-lg"
+                                  className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-cookie-secondary to-cookie-primary text-white rounded-xl hover:from-cookie-primary hover:to-cookie-dark transition-all duration-200 text-sm font-medium shadow-lg"
                                 >
                                   <Plus className="h-3 w-3" />
                                   <span>Add</span>
@@ -355,16 +414,105 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               <div className="border-t border-gray-200 pt-4 mb-6">
                 <div className="flex items-center justify-between text-2xl font-bold text-gray-900">
                   <span>Total:</span>
-                  <span className="text-red-600">₱{calculatePrice().toFixed(2)}</span>
+                  <span className="text-cookie-secondary">₱{calculatePrice().toFixed(2)}</span>
                 </div>
               </div>
 
               <button
                 onClick={handleCustomizedAddToCart}
-                className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-semibold flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="w-full bg-gradient-to-r from-cookie-secondary to-cookie-primary text-white py-4 rounded-xl hover:from-cookie-primary hover:to-cookie-dark transition-all duration-200 font-semibold flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <ShoppingCart className="h-5 w-5" />
                 <span>Add to Cart - ₱{calculatePrice().toFixed(2)}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bundle Selection Modal */}
+      {showBundleSelection && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between rounded-t-2xl">
+              <div>
+                <h3 className="text-xl font-semibold text-cookie-primary">Select Cookie Flavor</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Choose from our bestsellers (Total: {getTotalBundleQuantity()} / {getRequiredBundleQuantity()})
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBundleSelection(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3">
+              {cookieFlavors
+                .filter(flavor => flavor.active)
+                .map((flavor) => (
+                <div
+                  key={flavor.id}
+                  className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-xl transition-all duration-200"
+                >
+                  <div className="flex items-center space-x-3 flex-1">
+                    {flavor.image_url && (
+                      <img
+                        src={flavor.image_url}
+                        alt={flavor.name}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                    )}
+                    <span className="font-medium text-gray-900">{flavor.name}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 bg-cookie-background rounded-xl p-1 border border-cookie-secondary">
+                    <button
+                      type="button"
+                      onClick={() => updateBundleQuantity(flavor.name, -1)}
+                      disabled={bundleQuantities[flavor.name] === 0}
+                      className="p-1.5 hover:bg-cookie-light rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Minus className="h-3 w-3 text-cookie-primary" />
+                    </button>
+                    <span className="font-semibold text-gray-900 min-w-[24px] text-center text-sm">
+                      {bundleQuantities[flavor.name] || 0}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateBundleQuantity(flavor.name, 1)}
+                      disabled={getTotalBundleQuantity() >= getRequiredBundleQuantity()}
+                      className="p-1.5 hover:bg-cookie-light rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="h-3 w-3 text-cookie-primary" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-semibold text-gray-900">Total Items:</span>
+                  <span className="text-2xl font-bold text-cookie-secondary">{getTotalBundleQuantity()}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleBundleConfirm}
+                disabled={getTotalBundleQuantity() !== getRequiredBundleQuantity()}
+                className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  getTotalBundleQuantity() === getRequiredBundleQuantity()
+                    ? 'bg-gradient-to-r from-cookie-secondary to-cookie-primary text-white hover:from-cookie-primary hover:to-cookie-dark'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {getTotalBundleQuantity() === 0 
+                  ? 'Select Items' 
+                  : getTotalBundleQuantity() < getRequiredBundleQuantity()
+                    ? `Add ${getRequiredBundleQuantity() - getTotalBundleQuantity()} more`
+                    : 'Confirm Selection'}
               </button>
             </div>
           </div>

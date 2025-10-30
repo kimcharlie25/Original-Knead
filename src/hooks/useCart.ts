@@ -18,7 +18,7 @@ export const useCart = () => {
     return price;
   };
 
-  const addToCart = useCallback((item: MenuItem, quantity: number = 1, variation?: Variation, addOns?: AddOn[]) => {
+  const addToCart = useCallback((item: MenuItem, quantity: number = 1, variation?: Variation, addOns?: AddOn[], bundleSelection?: Record<string, number>) => {
     const totalPrice = calculateItemPrice(item, variation, addOns);
     
     // Group add-ons by name and sum their quantities
@@ -36,7 +36,8 @@ export const useCart = () => {
       const existingItem = prev.find(cartItem => 
         cartItem.id === item.id && 
         cartItem.selectedVariation?.id === variation?.id &&
-        JSON.stringify(cartItem.selectedAddOns?.map(a => `${a.id}-${a.quantity || 1}`).sort()) === JSON.stringify(groupedAddOns?.map(a => `${a.id}-${a.quantity}`).sort())
+        JSON.stringify(cartItem.selectedAddOns?.map(a => `${a.id}-${a.quantity || 1}`).sort()) === JSON.stringify(groupedAddOns?.map(a => `${a.id}-${a.quantity}`).sort()) &&
+        JSON.stringify(cartItem.bundleSelection) === JSON.stringify(bundleSelection)
       );
       
       if (existingItem) {
@@ -46,13 +47,14 @@ export const useCart = () => {
             : cartItem
         );
       } else {
-        const uniqueId = `${item.id}-${variation?.id || 'default'}-${addOns?.map(a => a.id).join(',') || 'none'}`;
+        const uniqueId = `${item.id}-${variation?.id || 'default'}-${addOns?.map(a => a.id).join(',') || 'none'}-${bundleSelection ? JSON.stringify(bundleSelection) : 'none'}`;
         return [...prev, { 
           ...item,
           id: uniqueId,
           quantity,
           selectedVariation: variation,
           selectedAddOns: groupedAddOns || [],
+          bundleSelection,
           totalPrice
         }];
       }

@@ -8,6 +8,7 @@ import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
+import CookieFlavorManager from './CookieFlavorManager';
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -17,7 +18,7 @@ const AdminDashboard: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'cookie-flavors'>('dashboard');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -254,10 +255,10 @@ const AdminDashboard: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-cookie-primary rounded-full flex items-center justify-center mb-4">
               <Lock className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-playfair font-semibold text-black">Admin Access</h1>
+            <h1 className="text-2xl font-more-sugar font-semibold text-black">Admin Access</h1>
             <p className="text-gray-600 mt-2">Enter password to access the admin dashboard</p>
           </div>
           
@@ -279,7 +280,7 @@ const AdminDashboard: React.FC = () => {
             
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+              className="w-full bg-cookie-primary text-white py-3 rounded-lg hover:bg-cookie-dark transition-colors duration-200 font-medium"
             >
               Access Dashboard
             </button>
@@ -315,7 +316,7 @@ const AdminDashboard: React.FC = () => {
                   <ArrowLeft className="h-5 w-5" />
                   <span>Back</span>
                 </button>
-                <h1 className="text-2xl font-playfair font-semibold text-black">
+                <h1 className="text-2xl font-more-sugar font-semibold text-black">
                   {currentView === 'add' ? 'Add New Item' : 'Edit Item'}
                 </h1>
               </div>
@@ -329,7 +330,7 @@ const AdminDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveItem}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
+                  className="px-4 py-2 bg-cookie-primary text-white rounded-lg hover:bg-cookie-dark transition-colors duration-200 flex items-center space-x-2"
                 >
                   <Save className="h-4 w-4" />
                   <span>Save</span>
@@ -383,7 +384,7 @@ const AdminDashboard: React.FC = () => {
                     type="checkbox"
                     checked={formData.popular || false}
                     onChange={(e) => setFormData({ ...formData, popular: e.target.checked })}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    className="rounded border-gray-300 text-cookie-secondary focus:ring-cookie-secondary"
                   />
                   <span className="text-sm font-medium text-black">Mark as Popular</span>
                 </label>
@@ -395,7 +396,7 @@ const AdminDashboard: React.FC = () => {
                     type="checkbox"
                     checked={formData.available ?? true}
                     onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    className="rounded border-gray-300 text-cookie-secondary focus:ring-cookie-secondary"
                   />
                   <span className="text-sm font-medium text-black">Available for Order</span>
                 </label>
@@ -404,7 +405,7 @@ const AdminDashboard: React.FC = () => {
 
             {/* Discount Pricing Section */}
             <div className="mb-8">
-              <h3 className="text-lg font-playfair font-medium text-black mb-4">Discount Pricing</h3>
+              <h3 className="text-lg font-more-sugar font-medium text-black mb-4">Discount Pricing</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Discount Price</label>
@@ -423,7 +424,7 @@ const AdminDashboard: React.FC = () => {
                       type="checkbox"
                       checked={formData.discountActive || false}
                       onChange={(e) => setFormData({ ...formData, discountActive: e.target.checked })}
-                      className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      className="rounded border-gray-300 text-cookie-secondary focus:ring-cookie-secondary"
                     />
                     <span className="text-sm font-medium text-black">Enable Discount</span>
                   </label>
@@ -459,7 +460,7 @@ const AdminDashboard: React.FC = () => {
               <textarea
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cookie-secondary focus:border-transparent"
                 placeholder="Enter item description"
                 rows={3}
               />
@@ -475,7 +476,7 @@ const AdminDashboard: React.FC = () => {
             {/* Variations Section */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-playfair font-medium text-black">Size Variations</h3>
+                <h3 className="text-lg font-more-sugar font-medium text-black">Size Variations</h3>
                 <button
                   onClick={addVariation}
                   className="flex items-center space-x-2 px-3 py-2 bg-cream-100 text-black rounded-lg hover:bg-cream-200 transition-colors duration-200"
@@ -491,14 +492,14 @@ const AdminDashboard: React.FC = () => {
                     type="text"
                     value={variation.name}
                     onChange={(e) => updateVariation(index, 'name', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-cookie-secondary focus:border-transparent"
                     placeholder="Variation name (e.g., Small, Medium, Large)"
                   />
                   <input
                     type="number"
                     value={variation.price}
                     onChange={(e) => updateVariation(index, 'price', Number(e.target.value))}
-                    className="w-24 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-24 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-cookie-secondary focus:border-transparent"
                     placeholder="Price"
                   />
                   <button
@@ -514,7 +515,7 @@ const AdminDashboard: React.FC = () => {
             {/* Add-ons Section */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-playfair font-medium text-black">Add-ons</h3>
+                <h3 className="text-lg font-more-sugar font-medium text-black">Add-ons</h3>
                 <button
                   onClick={addAddOn}
                   className="flex items-center space-x-2 px-3 py-2 bg-cream-100 text-black rounded-lg hover:bg-cream-200 transition-colors duration-200"
@@ -530,13 +531,13 @@ const AdminDashboard: React.FC = () => {
                     type="text"
                     value={addOn.name}
                     onChange={(e) => updateAddOn(index, 'name', e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-cookie-secondary focus:border-transparent"
                     placeholder="Add-on name"
                   />
                   <select
                     value={addOn.category}
                     onChange={(e) => updateAddOn(index, 'category', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-cookie-secondary focus:border-transparent"
                   >
                     {addOnCategories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -546,7 +547,7 @@ const AdminDashboard: React.FC = () => {
                     type="number"
                     value={addOn.price}
                     onChange={(e) => updateAddOn(index, 'price', Number(e.target.value))}
-                    className="w-24 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-24 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-cookie-secondary focus:border-transparent"
                     placeholder="Price"
                   />
                   <button
@@ -579,7 +580,7 @@ const AdminDashboard: React.FC = () => {
                   <ArrowLeft className="h-5 w-5" />
                   <span>Dashboard</span>
                 </button>
-                <h1 className="text-2xl font-playfair font-semibold text-black">Menu Items</h1>
+                <h1 className="text-2xl font-more-sugar font-semibold text-black">Menu Items</h1>
               </div>
               <div className="flex items-center space-x-3">
                 {showBulkActions && (
@@ -597,7 +598,7 @@ const AdminDashboard: React.FC = () => {
                 )}
                 <button
                   onClick={handleAddItem}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
+                  className="flex items-center space-x-2 bg-cookie-primary text-white px-4 py-2 rounded-lg hover:bg-cookie-dark transition-colors duration-200"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add New Item</span>
@@ -675,7 +676,7 @@ const AdminDashboard: React.FC = () => {
                         type="checkbox"
                         checked={selectedItems.length === menuItems.length && menuItems.length > 0}
                         onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 text-cookie-secondary focus:ring-cookie-secondary"
                       />
                       <span className="text-sm font-medium text-gray-700">
                         Select All ({menuItems.length} items)
@@ -804,7 +805,7 @@ const AdminDashboard: React.FC = () => {
                         type="checkbox"
                         checked={selectedItems.includes(item.id)}
                         onChange={() => handleSelectItem(item.id)}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 text-cookie-secondary focus:ring-cookie-secondary"
                       />
                       <span className="text-sm text-gray-600">Select</span>
                     </label>
@@ -893,6 +894,11 @@ const AdminDashboard: React.FC = () => {
     return <CategoryManager onBack={() => setCurrentView('dashboard')} />;
   }
 
+  // Cookie Flavors View
+  if (currentView === 'cookie-flavors') {
+    return <CookieFlavorManager onBack={() => setCurrentView('dashboard')} />;
+  }
+
   // Payment Methods View
   if (currentView === 'payments') {
     return <PaymentMethodManager onBack={() => setCurrentView('dashboard')} />;
@@ -913,7 +919,7 @@ const AdminDashboard: React.FC = () => {
                   <ArrowLeft className="h-5 w-5" />
                   <span>Dashboard</span>
                 </button>
-                <h1 className="text-2xl font-playfair font-semibold text-black">Site Settings</h1>
+                <h1 className="text-2xl font-more-sugar font-semibold text-black">Site Settings</h1>
               </div>
             </div>
           </div>
@@ -934,7 +940,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Coffee className="h-8 w-8 text-black" />
-              <h1 className="text-2xl font-noto font-semibold text-black">ClickEats Admin</h1>
+              <h1 className="text-2xl font-poppins font-semibold text-black">ClickEats Admin</h1>
             </div>
             <div className="flex items-center space-x-4">
               <a
@@ -959,7 +965,7 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-600 rounded-lg">
+              <div className="p-2 bg-cookie-primary rounded-lg">
                 <Package className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
@@ -1009,7 +1015,7 @@ const AdminDashboard: React.FC = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-playfair font-medium text-black mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-more-sugar font-medium text-black mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <button
                 onClick={handleAddItem}
@@ -1033,6 +1039,13 @@ const AdminDashboard: React.FC = () => {
                 <span className="font-medium text-gray-900">Manage Categories</span>
               </button>
               <button
+                onClick={() => setCurrentView('cookie-flavors')}
+                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
+              >
+                <Coffee className="h-5 w-5 text-gray-400" />
+                <span className="font-medium text-gray-900">Cookie Flavors</span>
+              </button>
+              <button
                 onClick={() => setCurrentView('payments')}
                 className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
               >
@@ -1050,7 +1063,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-playfair font-medium text-black mb-4">Categories Overview</h3>
+            <h3 className="text-lg font-more-sugar font-medium text-black mb-4">Categories Overview</h3>
             <div className="space-y-3">
               {categoryCounts.map((category) => (
                 <div key={category.id} className="flex items-center justify-between">

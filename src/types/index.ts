@@ -38,6 +38,7 @@ export interface CartItem extends MenuItem {
   selectedVariation?: Variation;
   selectedAddOns?: AddOn[];
   totalPrice: number;
+  bundleSelection?: Record<string, number>; // For bundle items: { flavorName: quantity }
 }
 
 export interface OrderData {
