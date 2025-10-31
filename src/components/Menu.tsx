@@ -73,7 +73,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
       {/* MobileNav hidden */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-12">
-        <h2 className="text-4xl font-more-sugar font-semibold text-cookie-primary mb-4">Our Delicious Cookies</h2>
+        <h2 className="text-4xl font-more-sugar font-semibold text-cookie-primary mb-4">It's all OK here!</h2>
         <p className="text-gray-600 max-w-2xl mx-auto font-poppins">
         Home-baked with love using quality ingredients. Wholesome pastries and healthy options made just right.
         </p>
