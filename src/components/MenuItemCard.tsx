@@ -436,7 +436,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between rounded-t-2xl">
               <div>
-                <h3 className="text-xl font-semibold text-cookie-primary">Select Cookie Flavor</h3>
+                <h3 className="text-xl font-semibold text-cookie-primary">Flavor Time! What’s Your Pick?</h3>
                 <p className="text-sm text-gray-500 mt-1">
                   Choose from our bestsellers (Total: {getTotalBundleQuantity()} / {getRequiredBundleQuantity()})
                 </p>
