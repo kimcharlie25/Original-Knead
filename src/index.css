@@ -8,7 +8,7 @@
 /* More Sugar Custom Font */
 @font-face {
   font-family: "More Sugar";
-  src: url("/fonts/MoreSugar.ttf") format("truetype");
+  src: url("/fonts/MoreSugar.otf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
