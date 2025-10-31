@@ -102,7 +102,7 @@ ${serviceType === 'delivery' ? `🛵 DELIVERY FEE:` : ''}
 
 ${notes ? `📝 Notes: ${notes}` : ''}
 
-Please confirm this order to proceed. Thank you for choosing Original Knead!
+Here’s my order. Please review it and let me know the shipping fee. Thank you so much!
     `.trim();
 
     const encodedMessage = encodeURIComponent(orderDetails);
