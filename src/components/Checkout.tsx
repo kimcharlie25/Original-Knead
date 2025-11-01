@@ -106,7 +106,7 @@ Here’s my order. Please review it and let me know the shipping fee. Thank you 
     `.trim();
 
     const encodedMessage = encodeURIComponent(orderDetails);
-    const messengerUrl = `https://m.me/61580817757927?text=${encodedMessage}`;
+    const messengerUrl = `https://m.me/theoriginalkneadofficial?text=${encodedMessage}`;
     
     window.open(messengerUrl, '_blank');
     
